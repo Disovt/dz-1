@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -42,19 +43,43 @@ func calculate(amount float64, from string, to string) float64 {
 	}
 }
 
-func getUserInput() (float64, string, string) {
-	var amount float64
+func getUserInputSourceCurrency(string, string) (float64, error) {
+	
 	var fromCurrency, toCurrency string
 	
-	fmt.Print("Введите сумму: ")
-	fmt.Scan(&amount)
-
-	fmt.Print("Выберите исходную валюту (USD, RUB, EUR): ")
+	fmt.Println("Выберите исходную валюту (USD, RUB, EUR): ")
 	fmt.Scan(&fromCurrency)
+	if fromCurrency != "USD" || fromCurrency != "usd" || fromCurrency != "EUR" || fromCurrency != "eur" || fromCurrency != "RUB" || fromCurrency != "rub"  {
+		return 0, errors.New("Неправильно введена исходная валюта")
+	}
 
-	fmt.Print("Выберите целевую валюту (USD, RUB, EUR): ")
+	switch {
+	case fromCurrency == "RUB" || fromCurrency == "rub":
+		fmt.Println("Выберите целевую валюту (USD, EUR): ")
+	case fromCurrency == "EUR" || fromCurrency == "eur":
+		fmt.Println("Выберите целевую валюту (USD, RUB): ")
+	case fromCurrency == "USD" || fromCurrency == "usd":
+		fmt.Println("Выберите целевую валюту (RUB, EUR): ")
+	}
+	
 	fmt.Scan(&toCurrency)
 
-	return amount, fromCurrency, toCurrency
+	return fromCurrency, toCurrency
 }
+	func getUserInputAmount(float64) (float64, error) {
+	var amount float64
+		fmt.Println("Введите сумму: ")
+	fmt.Scan(&amount)
+
+	if amount > 0 {
+		return amount
+		
+	} else { 
+		return 1, errors.New("Некорректно введено количество валюты") 
+	}
+	}
+
+	
+
+	
 
