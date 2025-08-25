@@ -4,8 +4,15 @@ import (
 	"fmt"
 )
 
-const USD_RUB = 80.35
-const USD_EUR = 0.85
+// Определяем тип для валюты
+type Currency string
+
+// Создаем map для хранения курсов валют относительно USD
+var rates = map[Currency]float64{
+	"USD": 1.0,   // 1 USD = 1 USD
+	"RUB": 80.35, // 1 USD = 80.35 RUB
+	"EUR": 0.85,  // 1 USD = 0.85 EUR
+}
 
 func main() {
 	for {
@@ -20,46 +27,31 @@ func main() {
 	}
 }
 
-func calculate(amount float64, from string, to string) float64 {
+func calculate(amount float64, from Currency, to Currency) float64 {
 	// Конвертируем через USD как базовую валюту
 	var amountInUSD float64
 
-	// Сначала переводим в USD
-	switch from {
-	case "USD", "usd":
-		amountInUSD = amount
-	case "RUB", "rub":
-		amountInUSD = amount / USD_RUB
-	case "EUR", "eur":
-		amountInUSD = amount / USD_EUR
-	}
+	// Сначала переводим в USD, используя map
+	amountInUSD = amount / rates[from]
 
-	// Затем конвертируем из USD в целевую валюту
-	switch to {
-	case "USD", "usd":
-		return amountInUSD
-	case "RUB", "rub":
-		return amountInUSD * USD_RUB
-	case "EUR", "eur":
-		return amountInUSD * USD_EUR
-	}
-
-	return 0
+	// Затем конвертируем из USD в целевую валюту, используя map
+	return amountInUSD * rates[to]
 }
 
 // Функция для ввода и проверки исходной валюты
-func getFromCurrency() string {
-	var currency string
+func getFromCurrency() Currency {
+	var input string
 
 	for {
 		fmt.Println("Доступные валюты: USD, RUB, EUR")
 		fmt.Print("Введите исходную валюту: ")
-		fmt.Scan(&currency)
+		fmt.Scan(&input)
 
-		// Проверяем корректность ввода
-		if currency == "USD" || currency == "usd" ||
-			currency == "RUB" || currency == "rub" ||
-			currency == "EUR" || currency == "eur" {
+		// Преобразуем ввод в тип Currency
+		currency := Currency(input)
+
+		// Проверяем корректность ввода через map
+		if _, exists := rates[currency]; exists {
 			return currency
 		}
 		fmt.Println("Ошибка: неправильно введена исходная валюта. Попробуйте снова.")
@@ -83,44 +75,28 @@ func getAmount() float64 {
 }
 
 // Функция для ввода и проверки целевой валюты
-func getToCurrency(fromCurrency string) string {
-	var currency string
+func getToCurrency(fromCurrency Currency) Currency {
+	var input string
 
 	for {
 		// Подсказываем доступные варианты в зависимости от исходной валюты
 		switch fromCurrency {
-		case "RUB", "rub":
+		case "RUB":
 			fmt.Println("Доступные валюты: USD, EUR")
-			fmt.Print("Введите целевую валюту: ")
-		case "EUR", "eur":
+		case "EUR":
 			fmt.Println("Доступные валюты: USD, RUB")
-			fmt.Print("Введите целевую валюту: ")
-		case "USD", "usd":
+		case "USD":
 			fmt.Println("Доступные валюты: RUB, EUR")
-			fmt.Print("Введите целевую валюту: ")
 		}
+		
+		fmt.Print("Введите целевую валюту: ")
+		fmt.Scan(&input)
 
-		fmt.Scan(&currency)
+		// Преобразуем ввод в тип Currency
+		currency := Currency(input)
 
 		// Проверяем, что целевая валюта корректна и отличается от исходной
-		validCurrency := false
-		if currency == "USD" || currency == "usd" ||
-			currency == "RUB" || currency == "rub" ||
-			currency == "EUR" || currency == "eur" {
-			validCurrency = true
-		}
-
-		// Проверяем, что не выбрана та же самая валюта
-		sameCurrency := false
-		if (fromCurrency == "USD" || fromCurrency == "usd") && (currency == "USD" || currency == "usd") {
-			sameCurrency = true
-		} else if (fromCurrency == "RUB" || fromCurrency == "rub") && (currency == "RUB" || currency == "rub") {
-			sameCurrency = true
-		} else if (fromCurrency == "EUR" || fromCurrency == "eur") && (currency == "EUR" || currency == "eur") {
-			sameCurrency = true
-		}
-
-		if validCurrency && !sameCurrency {
+		if _, exists := rates[currency]; exists && currency != fromCurrency {
 			return currency
 		}
 		fmt.Println("Ошибка: неправильно введена целевая валюта. Попробуйте снова.")
@@ -129,7 +105,7 @@ func getToCurrency(fromCurrency string) string {
 }
 
 // Основная функция для получения всех входных данных
-func getUserInput() (float64, string, string) {
+func getUserInput() (float64, Currency, Currency) {
 	fmt.Println("=== Шаг 1: Выбор исходной валюты ===")
 	fromCurrency := getFromCurrency()
 
