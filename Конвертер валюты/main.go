@@ -17,8 +17,8 @@ var rates = map[Currency]float64{
 func main() {
 	for {
 		fmt.Println("=== Конвертер валют ===")
-		amount, fromCurrency, toCurrency := getUserInput()
-		result := calculate(amount, fromCurrency, toCurrency)
+		amount, fromCurrency, toCurrency := getUserInput(&rates)
+		result := calculate(amount, fromCurrency, toCurrency, &rates)
 		fmt.Printf("Итог: %.2f %s\n", result, toCurrency)
 
 		if !checkRepeat() {
@@ -27,19 +27,19 @@ func main() {
 	}
 }
 
-func calculate(amount float64, from Currency, to Currency) float64 {
+func calculate(amount float64, from Currency, to Currency, rates *map[Currency]float64) float64 {
 	// Конвертируем через USD как базовую валюту
 	var amountInUSD float64
 
 	// Сначала переводим в USD, используя map
-	amountInUSD = amount / rates[from]
+	amountInUSD = amount / (*rates)[from]
 
 	// Затем конвертируем из USD в целевую валюту, используя map
-	return amountInUSD * rates[to]
+	return amountInUSD * (*rates)[to]
 }
 
 // Функция для ввода и проверки исходной валюты
-func getFromCurrency() Currency {
+func getFromCurrency(rates *map[Currency]float64) Currency {
 	var input string
 
 	for {
@@ -51,7 +51,7 @@ func getFromCurrency() Currency {
 		currency := Currency(input)
 
 		// Проверяем корректность ввода через map
-		if _, exists := rates[currency]; exists {
+		if _, exists := (*rates)[currency]; exists {
 			return currency
 		}
 		fmt.Println("Ошибка: неправильно введена исходная валюта. Попробуйте снова.")
@@ -75,7 +75,7 @@ func getAmount() float64 {
 }
 
 // Функция для ввода и проверки целевой валюты
-func getToCurrency(fromCurrency Currency) Currency {
+func getToCurrency(fromCurrency Currency, rates *map[Currency]float64) Currency {
 	var input string
 
 	for {
@@ -96,7 +96,7 @@ func getToCurrency(fromCurrency Currency) Currency {
 		currency := Currency(input)
 
 		// Проверяем, что целевая валюта корректна и отличается от исходной
-		if _, exists := rates[currency]; exists && currency != fromCurrency {
+		if _, exists := (*rates)[currency]; exists && currency != fromCurrency {
 			return currency
 		}
 		fmt.Println("Ошибка: неправильно введена целевая валюта. Попробуйте снова.")
@@ -105,15 +105,15 @@ func getToCurrency(fromCurrency Currency) Currency {
 }
 
 // Основная функция для получения всех входных данных
-func getUserInput() (float64, Currency, Currency) {
+func getUserInput(rates *map[Currency]float64) (float64, Currency, Currency) {
 	fmt.Println("=== Шаг 1: Выбор исходной валюты ===")
-	fromCurrency := getFromCurrency()
+	fromCurrency := getFromCurrency(rates)
 
 	fmt.Println("\n=== Шаг 2: Ввод суммы ===")
 	amount := getAmount()
 
 	fmt.Println("\n=== Шаг 3: Выбор целевой валюты ===")
-	toCurrency := getToCurrency(fromCurrency)
+	toCurrency := getToCurrency(fromCurrency, rates)
 
 	return amount, fromCurrency, toCurrency
 }
